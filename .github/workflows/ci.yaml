@@ -1,271 +1,91 @@
-name: React.js CI
+# Workflow ka naam, jo GitHub Actions mein dikhai dega
+# name: React.js CI
 
-on:
-  push:
-      branches: 
-        - "master"
-  pull_request:
-    branches: "master"
+# # Workflow ko trigger karne wale events
+# on:
+#   push: # Jab code push hoga
+#     branches: 
+#       - "master"      # Sirf master branch mein push hone par hi workflow chalega
+#   pull_request: # Jab pull request banega ya update hoga
+#     branches: "master" # Sirf master branch ko target karne wale PR par hi workflow chalega
 
-jobs:
-  frontend-test:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./quiz-app
-    strategy:
-      matrix:
-        node-version: [20.x]
-        architecture: [x64]
-    steps:
-      - name: Check-out git repository  
-        uses: actions/checkout@v4
+# # Workflow mein jobs define karna
+# jobs:
 
-      - name: USE NODEJS ${{ matrix.node-version }} - ${{ matrix.architecture }}
-        uses: actions/setup-node@v4
+#   ##############################################################
+#   # FRONTEND TEST JOB – React.js frontend ke liye testing
+#   ##############################################################
+#   frontend-test:
+#     runs-on: ubuntu-latest # Job Ubuntu ke latest version par run hoga
+#     defaults:
+#       run:
+#         working-directory: ./quiz-app # Run commands ke liye default working directory set karna
+#     strategy:
+#       matrix:
+#         node-version: [20.x] # Node.js version yaha set kar rahe hain
+#         architecture: [x64]  # System architecture 64-bit
+#     steps:
+#       - name: Check-out git repository  
+#         uses: actions/checkout@v4 # GitHub repository ko checkout karne ka action
 
-      - name: Install project dependencies 
-        working-directory: ./quiz-app
-        run: |
-          npm i
-          npm run lint
-          npm install --save-dev --save-exact prettier
-          npm run prettier
-          npm test
-        env:
-          CI: true 
+#       - name: USE NODEJS ${{ matrix.node-version }} - ${{ matrix.architecture }}
+#         uses: actions/setup-node@v4 # Node.js environment setup karne ka action
 
-      - name: Build
-        run: npm run build
-        working-directory: ./quiz-app
+#       - name: Install project dependencies 
+#         working-directory: ./quiz-app # Directory set karna
+#         run: |
+#           npm i                # Dependencies install karo
+#           npm run lint         # Code style lint check karo
+#           npm install --save-dev --save-exact prettier # Prettier install karo formatting ke liye
+#           npm run prettier    # Code formatting apply karo
+#           npm test            # Tests run karo
+#         env:
+#           CI: true # Continuous integration environment set karo
 
-              # Setup sonar-scanner
-      - name: Setup SonarQube
-        uses: warchant/setup-sonar-scanner@v8
+#       - name: Build
+#         run: npm run build   # Application ko build karo
+#         working-directory: ./quiz-app
 
-      - name: Analyze with SonarCloud
-        uses: sonarsource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets._GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          projectBaseDir: quiz-app
-          args: >
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-            -Dsonar.host.url=${{ secrets.SONAR_URL }}
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-            -Dsonar.sources=src/
-            -Dsonar.verbose=true
-        
-  backend-test:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend
-    strategy:
-      matrix:
-        node-version: [20.x]
-        architecture: [x64]
-    steps:
-      - name: Check-out git repository  
-        uses: actions/checkout@v4
+#       - name: Setup SonarQube
+#         uses: warchant/setup-sonar-scanner@v8 # Sonar scanner ko setup karne ka action
 
-      - name: USE NODEJS ${{ matrix.node-version }} - ${{ matrix.architecture }}
-        uses: actions/setup-node@v4
+#       - name: Analyze with SonarCloud
+#         uses: sonarsource/sonarcloud-github-action@master # SonarCloud analysis action
+#         env:
+#           GITHUB_TOKEN: ${{ secrets._GITHUB_TOKEN }} # GitHub authentication token
+#           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # SonarCloud token
+#         with:
+#           projectBaseDir: quiz-app # Project directory
+#           args: > # Extra sonar arguments
+#             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} # Organization key
+#             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} # Project key
+#             -Dsonar.host.url=${{ secrets.SONAR_URL }} # SonarCloud server URL
+#             -Dsonar.login=${{ secrets.SONAR_TOKEN }} # Authentication token
+#             -Dsonar.sources=src/ # Source files directory
+#             -Dsonar.verbose=true # Verbose output enable karna
 
-      - name: Install project dependencies 
-        working-directory: ./backend
-        run: |
-          npm i
-          npm run lint
-          npm install --save-dev --save-exact prettier
-          npm run prettier
-          npm test
-        env:
-          CI: true 
+#   ##############################################################
+#   # BACKEND TEST JOB – Node.js backend ke liye testing
+#   ##############################################################
+#   backend-test:
+#     runs-on: ubuntu-latest # Job Ubuntu par run karega
+#     defaults:
+#       run:
+#         working-directory: ./backend # Default working directory
+#     strategy:
+#       matrix:
+#         node-version: [20.x] # Node.js version
+#         architecture: [x64] # Architecture
+#     steps:
+#       - name: Check-out git repository  
+#         uses: actions/checkout@v4 # GitHub repository checkout
 
-              # Setup sonar-scanner
-      - name: Setup SonarQube
-        uses: warchant/setup-sonar-scanner@v8
+#       - name: USE NODEJS ${{ matrix.node-version }} - ${{ matrix.architecture }}
+#         uses: actions/setup-node@v4 # Node.js environment setup
 
-      - name: Analyze with SonarCloud
-        uses: sonarsource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          projectBaseDir: backend
-          args: >
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-            -Dsonar.host.url=${{ secrets.SONAR_URL }}
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-            -Dsonar.sources=.
-            -Dsonar.verbose=true
-          
-
-  frontend-security:
-    needs: frontend-test
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./quiz-app
-    steps:
-      - uses: actions/checkout@master
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
-        continue-on-error: true # To make sure that SARIF upload gets called
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          
-      - name: Install Snyk CLI
-        uses: snyk/actions/setup@master
-        with:
-          version: latest
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}  
-         
-      - name: Snyk Authenticate    
-        run: snyk auth ${{ secrets.SNYK_TOKEN }}
-
-      - name: Snyk Code Test
-        run: snyk code test --all-projects
-        continue-on-error: true
-
-  backend-security:
-    needs: backend-test
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend
-    steps:
-      - uses: actions/checkout@master
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
-        continue-on-error: true # To make sure that SARIF upload gets called
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-         
-      - name: Install Snyk CLI
-        uses: snyk/actions/setup@master
-        with:
-          version: latest
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          
-      - name: Snyk Authenticate    
-        run: snyk auth ${{ secrets.SNYK_TOKEN }}
-
-      - name: Snyk Code Test
-        run: snyk code test --all-projects
-        continue-on-error: true
-
-  frontend-image:
-    needs: frontend-security
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read 
-      security-events: write 
-      actions: read
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Build and push backend Docker image
-      working-directory: ./quiz-app
-      run: |
-        docker build . -t ${{ secrets.DOCKER_USERNAME }}/frontend-js
-        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin 
-        docker push ${{ secrets.DOCKER_USERNAME }}/frontend-js    
-
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: 'docker.io/${{ secrets.DOCKER_USERNAME }}/backend-api'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-        severity: 'CRITICAL,HIGH' 
-
-    - name: Install Snyk CLI
-      uses: snyk/actions/setup@master
-      with:
-        snyk-token: ${{ secrets.SNYK_TOKEN }}
-       
-    - name: Snyk Authenticate    
-      run: snyk auth ${{ secrets.SNYK_TOKEN }}
-  
-    - name: Snyk Container monitor
-      run: snyk container monitor ${{ secrets.DOCKER_USERNAME }}/frontend-js --file=Dockerfile   
-      working-directory: ./quiz-app
-
-    - name: Run Snyk to check for vulnerabilities in the Docker image
-      uses: snyk/actions/docker@master
-      with:
-        image: ${{ secrets.DOCKER_USERNAME }}/frontend-js
-        args: --file=quiz-app/Dockerfile --severity-threshold=high
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      continue-on-error: true
-
-
-
-  backend-image:
-    needs: backend-security
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read 
-      security-events: write 
-      actions: read
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Build and push backend Docker image
-      working-directory: ./backend
-      run: |
-        docker build . -t ${{ secrets.DOCKER_USERNAME }}/backend-api
-        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin 
-        docker push ${{ secrets.DOCKER_USERNAME }}/backend-api    
-
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: 'docker.io/${{ secrets.DOCKER_USERNAME }}/backend-api'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-        severity: 'CRITICAL,HIGH' 
-        
-    - name: Install Snyk CLI
-      uses: snyk/actions/setup@master
-      with:
-        snyk-token: ${{ secrets.SNYK_TOKEN }}
-     
-    - name: Snyk Authenticate    
-      run: snyk auth ${{ secrets.SNYK_TOKEN }}
-
-    - name: Snyk Container monitor
-      run: snyk container monitor ${{ secrets.DOCKER_USERNAME }}/backend-api --file=Dockerfile   
-      working-directory: ./backend
-
-    - name: Run Snyk to check for vulnerabilities in the Docker image
-      uses: snyk/actions/docker@master
-      with:
-        image: ${{ secrets.DOCKER_USERNAME }}/backend-api
-        args: --file=backend/Dockerfile --severity-threshold=high
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      continue-on-error: true 
-
-
-  k8s-manifest-scan:
-    needs: [backend-security, frontend-security]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run Snyk to check Kubernetes manifest file for issues
-        uses: snyk/actions/iac@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          file: kubernetes-manifest/
-          args: --severity-threshold=high
-  #
+#       - name: Install project dependencies 
+#         working-directory: ./backend
+#         run: |
+#           npm i # Dependencies install
+#           npm run lint # Linter run
+#           npm install --save-dev --save-exact prettier # Prettier install
